@@ -1,9 +1,11 @@
 package tech.tagline.sendtoall.command;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
@@ -12,31 +14,39 @@ import tech.tagline.sendtoall.SendToAll;
 import tech.tagline.sendtoall.payload.CommandPayload;
 import tech.tagline.trevor.api.database.DatabaseProxy;
 
-import javax.inject.Named;
+import static com.mojang.brigadier.arguments.StringArgumentType.string;
+import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 
 public class SendCommand {
 
   public static BrigadierCommand build(String instanceID, DatabaseProxy proxy) {
-    return new BrigadierCommand(LiteralArgumentBuilder
-            .<CommandSource>literal("sendtoall")
-            .executes(context -> {
-              CommandSource source = context.getSource();
-              if (!source.hasPermission("sendtoall.dispatch")) {
-                source.sendMessage(Component.text("Permission denied.").color(NamedTextColor.RED));
-              }
+    return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("sendtoall")
+            .then(
+                    RequiredArgumentBuilder.<CommandSource, String>argument("command", string())
+                            .executes(context -> handle(context, instanceID, proxy))
+            )
+    );
+  }
 
-              String name = source instanceof ConsoleCommandSource ? "Console" :
-                      ((Player) source).getUniqueId().toString();
-              String sender = "[" + instanceID + "]" + name;
+  private static int handle(CommandContext<CommandSource> context, String instanceID,
+                            DatabaseProxy proxy) {
+    CommandSource source = context.getSource();
+    if (!source.hasPermission("sendtoall.dispatch")) {
+      source.sendMessage(Component.text("Permission denied.").color(NamedTextColor.RED));
+    }
 
-              CommandPayload payload = new CommandPayload(sender, context.getInput());
+    String command = getString(context, "command");
+    String name = source instanceof ConsoleCommandSource ? "Console" :
+            ((Player) source).getUniqueId().toString();
+    String sender = "[" + instanceID + "]" + name;
 
-              proxy.post(SendToAll.CHANNEL, payload);
+    CommandPayload payload = new CommandPayload(sender, command);
 
-              source.sendMessage(
-                      Component.text("Command dispatched.").color(NamedTextColor.LIGHT_PURPLE));
+    proxy.post(SendToAll.CHANNEL, payload);
 
-              return 1;
-            }).build());
+    source.sendMessage(
+            Component.text("Command dispatched.").color(NamedTextColor.LIGHT_PURPLE));
+
+    return 1;
   }
 }
