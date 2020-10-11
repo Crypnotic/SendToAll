@@ -28,6 +28,11 @@ public class SendCommand implements SimpleCommand {
       return;
     }
 
+    if (invocation.arguments().length < 1) {
+      source.sendMessage(Component.text("Usage: /sendtoall <command>").color(NamedTextColor.RED));
+      return;
+    }
+
     String command = String.join(" ", invocation.arguments());
     String name = source instanceof ConsoleCommandSource ? "Console" :
             ((Player) source).getUniqueId().toString();
