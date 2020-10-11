@@ -18,11 +18,20 @@ import tech.tagline.trevor.api.TrevorService;
 import tech.tagline.trevor.api.network.event.NetworkIntercomEvent;
 import tech.tagline.trevor.api.network.payload.NetworkPayload;
 
-@Plugin(id = "sendtoall", name = "SendToAll", version = "@VERSION@",
-        dependencies = { @Dependency(id = "trevor") })
+@Plugin(
+        id = "sendtoall",
+        name = "SendToAll",
+        version = "@VERSION@",
+        dependencies = {
+                @Dependency(id = "trevor")
+        })
 public class SendToAll {
 
   public static final String CHANNEL = "sendtoall:dispatch";
+
+  public SendToAll() {
+    System.out.println("SendToAll construct");
+  }
 
   @Inject
   private Logger logger;
@@ -31,6 +40,7 @@ public class SendToAll {
 
   @Subscribe
   public void onProxyInitialization(ProxyInitializeEvent event) {
+    System.out.println("SendToAll initialize");
     TrevorAPI api = TrevorService.getAPI();
 
     api.getDatabase().getIntercom().add(CHANNEL);
