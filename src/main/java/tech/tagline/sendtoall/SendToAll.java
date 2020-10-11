@@ -37,7 +37,9 @@ public class SendToAll {
 
     String instanceID = api.getPlatform().getInstanceConfiguration().getID();
 
-    server.getCommandManager().register(SendCommand.build(instanceID, api.getDatabaseProxy()));
+    server.getCommandManager().register(
+            server.getCommandManager().metaBuilder("sendtoall").build(),
+            new SendCommand(instanceID, api.getDatabaseProxy()));
   }
 
   @Subscribe
